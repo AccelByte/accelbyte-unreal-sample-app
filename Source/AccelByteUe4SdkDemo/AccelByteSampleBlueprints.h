@@ -8,9 +8,12 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "Core/AccelByteError.h"
+#include "Models/AccelByteEcommerceModels.h"
 #include "AccelByteSampleBlueprints.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FAccelByteLoginResult, APlayerController*, PlayerController, int32, ErrorCode, FString const&, ErrorMessage);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FDAccelByteModelsPlatformSyncMobileGoogleResponse, FAccelByteModelsPlatformSyncMobileGoogleResponse, Response);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FDAccelByteModelsItemInfo, FAccelByteModelsItemInfo, Response);
 
 UCLASS(MinimalAPI)
 class UAccelByteLoginNativePlatform : public UBlueprintAsyncActionBase
@@ -29,7 +32,7 @@ public:
 
 	// Login with native platform online subsystem
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject"), Category = "AccelByte | SampleApp")
-	static UAccelByteLoginNativePlatform* LoginWithNativePlatform(UObject* WorldContextObject, class APlayerController* InPlayerController);
+	static UAccelByteLoginNativePlatform* LoginWithNativePlatform(UObject* WorldContextObject, APlayerController* InPlayerController);
 
 	// UBlueprintAsyncActionBase interface
 	virtual void Activate() override;
@@ -63,7 +66,7 @@ public:
 
 	// Login to AccelByte service
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext="WorldContextObject"), Category = "AccelByte | SampleApp")
-	static UAccelByteLogin* LoginWithAccelByte(UObject* WorldContextObject, class APlayerController* InPlayerController);
+	static UAccelByteLogin* LoginWithAccelByte(UObject* WorldContextObject, APlayerController* InPlayerController);
 
 	// UBlueprintAsyncActionBase interface
 	virtual void Activate() override;
@@ -87,9 +90,30 @@ class UAccelByteBluePrintsSample : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | Load Config")
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | Utilities")
 	static void LoadConfig();
 	
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | Utilities")
+	static EAccelBytePlatformType GetPlatformTypeFromSubsystem(FString const& SubsystemName);
+
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | Utilities")
+	static EAccelBytePlatformType GetNativePlatformType();
+	
 	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | IAP")
-	static void FinalizePurchase(FDHandler const& OnSuccess, FDErrorHandler const& OnError);
+	static void GetItemBySku(FString const& Sku, FDAccelByteModelsItemInfo const& OnSuccess, FDErrorHandler const& OnError);
+
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | IAP")
+	static void FinalizePurchase(APlayerController* InPlayerController, FString const& ReceiptId, FDHandler const& OnSuccess, FDErrorHandler const& OnError);
+
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | IAP")
+	static void SyncPurchaseGooglePlay(APlayerController* InPlayerController, FAccelByteModelsPlatformSyncMobileGoogle const& SyncRequest, FDHandler const& OnSuccess, FDErrorHandler const& OnError);
+	
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | IAP")
+	static void SyncPurchaseApple(APlayerController* InPlayerController, FAccelByteModelsPlatformSyncMobileApple const& SyncRequest, FDHandler const& OnSuccess, FDErrorHandler const& OnError);
+
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | IAP")
+	static FAccelByteModelsPlatformSyncMobileGoogle ParseReceiptString(FString const& ReceiptData);
+
+	UFUNCTION(BlueprintCallable, Category = "AccelByte | SampleApp | IAP")
+	static FString ParseReceiptToStringDisplay(FString const& ReceiptData);
 };
